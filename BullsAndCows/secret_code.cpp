@@ -1,10 +1,11 @@
+#include <iostream>
 #include <cstdlib> 
 #include <ctime>
-#include "ai_code.h"
+#include "secret_code.h"
 
 using namespace std;
 
-int* generateSecretAiCode(int size) {
+int* generateAiSecretCode(int size) {
 
 	srand(time(0));
 	int* number = new int[size];
@@ -20,6 +21,22 @@ int* generateSecretAiCode(int size) {
 		index++;
 	}
 	return number;
+}
+
+int* getPlayerSecretCode(int size) {
+
+	int* secretCode = new int[size];
+	int input;
+	int index = 0;
+
+	while (index < size) {
+		cout << "Your code: ";
+		cin >> input;
+
+		index++;
+	}
+
+	return secretCode;
 }
 
 bool checkSameValue(int value, int arr[], int index) {

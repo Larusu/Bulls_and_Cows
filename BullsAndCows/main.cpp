@@ -1,15 +1,18 @@
 #include <iostream>
-#include "ai_code.h"
+#include "secret_code.h"
 
 using namespace std;
 
-
 int main() {
 
-	int* array = generateSecretAiCode(4);
+	/*int* aiSecretCode = generateSecretAiCode(4);
+	delete aiSecretCode;*/
 
-	for (int i = 0; i < 4; i++) {
-		cout << array[i] << " ";
+	int size = 4;
+	int* playerSecretCode = getPlayerSecretCode(size);
+
+	for (int i = 0; i < size; i++) {
+		cout << playerSecretCode[i] << " ";
 	}
-	delete array;
+	return 0;
 }
