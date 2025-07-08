@@ -1,21 +1,31 @@
 #include <iostream>  
+#include <fstream>
+#include <string>
 #include "secret_code.h"  
 
 using namespace std;  
 
 int main()
 {
-	int codeLength;
+	startGame();
 
-	printMenu();
+	fstream aiSecretCodeFile("AiSecretCode.txt", ios::in);
+	fstream playerSecretCodeFile("PlayerSecretCode.txt", ios::in);
 
-	cout << "\nSecret code length: ";
-	cin >> codeLength;
+	if (!aiSecretCodeFile.is_open() || !playerSecretCodeFile.is_open()) {
+		cerr << "Error opening files." << endl;
+		return 1;
+	}
 
-	string AISecretCode = generateAiSecretCode(codeLength);
-	string playerSecretCode = getPlayerSecretCode(codeLength);
+	string aiSecretCode;
+	string playerSecretCode;
+	getline(aiSecretCodeFile, aiSecretCode);
+	getline(playerSecretCodeFile, playerSecretCode);
 
-	cout << "\nAI Secret Code: " << AISecretCode << endl;
+	aiSecretCodeFile.close();
+	playerSecretCodeFile.close();
+
+	cout << "\nAI Secret Code: " << aiSecretCode << endl;
 	cout << "Player Secret Code: " << playerSecretCode;
 
 	return 0;
