@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-	startGame();
+	setupGame();
 
 	fstream aiSecretCodeFile("AiSecretCode.txt", ios::in);
 	fstream playerSecretCodeFile("PlayerSecretCode.txt", ios::in);

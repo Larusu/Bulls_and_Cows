@@ -7,20 +7,39 @@
 
 using namespace std;
 
-void startGame() {
+void generateAiSecretCode(int digitCount);
+void getPlayerSecretCode(int digitCount);
+bool checkSameValue(char value, std::string code, int index);
+void printMenu(int length, int attempts);
+bool checkDifficulty(string difficulty);
 
-    int codeLength = -1;
-    while (codeLength == -1) {
-        cout << "Secret code length: ";
-        cin >> codeLength;
+void setupGame() {
 
-        if (codeLength > 9 || codeLength < 4) {
-            cout << "Invalid code length. Please enter a number between 4 and 9." << endl;
-            codeLength = -1;
-        }
+    int codeLength = 0, attempts = 0;
+    string difficulty;
+
+    cout << "Choose difficulty (Easy, Medium, Hard): ";
+    cin >> difficulty;
+
+    while (!checkDifficulty(difficulty)) {
+		cout << "Invalid difficulty. Please choose Easy, Medium, or Hard: ";
+		cin >> difficulty;
     }
-
-    printMenu(codeLength);
+    
+    if (difficulty == "Easy" || difficulty == "easy") {
+        codeLength = 4;
+        attempts = 7;
+    }
+    else if (difficulty == "Medium" || difficulty == "medium") {
+        codeLength = 6;
+        attempts = 8;
+    }
+    else if (difficulty == "Hard" || difficulty == "hard") {
+        codeLength = 8;
+        attempts = 9;
+    }
+    
+    printMenu(codeLength, attempts);
 
     generateAiSecretCode(codeLength);
     getPlayerSecretCode(codeLength);
@@ -108,36 +127,27 @@ bool checkSameValue(char value, string strValue, int index) {
     return false;
 }
 
-void printMenu(int length) {
-
-    int attempts = 0;
-    switch (length) {
-    case 4:
-    case 5: attempts = 7;
-		break;
-    case 6:
-    case 7:
-        attempts = 8;
-        break;
-    case 8:
-    case 9:
-		attempts = 9;
-		break;
-    }
+void printMenu(int length, int attempts) {
 
 	cout << endl;
     cout << "==========================================" << endl;
     cout << "        Welcome to Bulls and Cows!" << endl;
     cout << "==========================================" << endl;
     cout << "Rules: " << endl;
-    cout << "1. You and the AI will each choose a " << length << " - digit secret code." << endl;
-    cout << "2. Each digit must be unique and between 0 and 9." << endl;
-    cout << "3. You will try to guess the AI's code, and the AI will try to guess yours." << endl;
-    cout << "4. After each guess, you'll be told how many Bulls and Cows you got:" << endl;
+    cout << "1. You will choose a difficulty of the game (Easy, Medium, Hard)." << endl;
+    cout << "2. You and the AI will each choose a " << length << " - digit secret code." << endl;
+    cout << "3. Each digit must be unique and between 0 and 9." << endl;
+    cout << "4. You will try to guess the AI's code, and the AI will try to guess yours." << endl;
+    cout << "5. After each guess, you'll be told how many Bulls and Cows you got:" << endl;
     cout << "   - Bulls: Correct digit in the correct position." << endl;
     cout << "   - Cows:  Correct digit in the wrong position." << endl;
-    cout << "5. Each side has a maximum of 7 guesses." << endl;
+    cout << "6. Each side has a maximum of " << attempts << " guesses." << endl;
     cout << "   - If neither side guesses the correct answer within "<< attempts << " attempts," << endl;
     cout << "     the game ends in draw." << endl;
     cout << "Let's start!" << endl << endl;
+}
+
+bool checkDifficulty(string difficulty) {
+    return (difficulty != "Easy" || difficulty != "easy" || difficulty != "medium" || difficulty != "Medium" ||
+        difficulty != "hard" || difficulty != "Hard");
 }
