@@ -62,9 +62,6 @@ int* getPlayerSecretCode(int size) {
 bool checkSameValue(int value, int arr[], int index) {
 
 	for (int i = 0; i < index; i++) {
-		if (arr[i] == '\0') {
-			continue;
-		}
 		if (value == arr[i]) {
 			return true;
 		}
