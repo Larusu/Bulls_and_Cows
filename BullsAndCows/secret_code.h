@@ -1,5 +1,6 @@
 #pragma once
 
-int* generateAiSecretCode(int size);
-int* getPlayerSecretCode(int size);
-bool checkSameValue(int value, int arr[], int index);
+string generateAiSecretCode(int digitCount);
+string getPlayerSecretCode(int digitCount);
+bool checkSameValue(char value, string code, int index);
+void printMenu();

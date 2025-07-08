@@ -1,70 +1,92 @@
 #include <iostream>
-#include <cstdlib> 
+#include <string>
+#include <cstdlib>
 #include <ctime>
 #include "secret_code.h"
 
 using namespace std;
 
-int* generateAiSecretCode(int size) {
+string generateAiSecretCode(int digitCount) {
+   srand(time(0));
+   string AISecretCode = "";
 
-	srand(time(0));
-	int* number = new int[size];
-	int index = 0;
-	while (index < size) {
+   while (AISecretCode.length() < digitCount) {
+       char random = (rand() % 10) + '0';
 
-		int random = rand() % 10;
-
-		if (checkSameValue(random, number, index)) {
-			continue;
-		}
-		number[index] = random;
-		index++;
-	}
-	return number;
+       if (AISecretCode.find(random) == string::npos) {
+           AISecretCode += random;
+       }
+       else {
+           continue;
+       }
+   }
+   return AISecretCode;
 }
 
-int* getPlayerSecretCode(int size) {  
+string getPlayerSecretCode(int digitCount) {
+    string playerSecretCode;
 
-	int* secretCode = new int[size];  
-	int input;  
+    while (true) {
+        cout << "Enter your secret code (" << digitCount << " unique digits): ";
+        cin >> playerSecretCode;
 
-	while (true) {  
-		cout << "Your code: ";  
-		cin >> input;  
+        if (playerSecretCode.length() != digitCount) {
+            cout << "Invalid length. Try again.\n";
+            continue;
+        }
 
-		if (input < 1000 || input > 9999) {  
-			cout << "Please enter a 4-digit number." << endl;  
-			continue;  
-		}  
+        bool allDigits = true;
+        for (int i = 0; i < digitCount; i++) {
+            if (playerSecretCode[i] < '0' || playerSecretCode[i] > '9') {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {
+            cout << "Input must contain only digits.\n";
+            continue;
+        }
 
-		for (int i = size - 1; i >= 0; i--) {  
-			secretCode[i] = input % 10;  
-			input /= 10;  
-		}  
+        bool duplicate = false;
+        for (int i = 0; i < digitCount; i++) {
+            if (checkSameValue(playerSecretCode[i], playerSecretCode, i)) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (duplicate) {
+            cout << "Digits must be unique.\n";
+            continue;
+        }
 
-		bool duplicate = false;
-		for (int i = 0; i < size; i++) {
-			if (checkSameValue(secretCode[i], secretCode, i)) {
-				duplicate = true;
-				break;
-			}
-		}
-
-		if (duplicate) {  
-			cout << "Please enter a code with unique digits." << endl;  
-			continue;  
-		}  
-		break;  
-	}  
-	return secretCode;  
+        break;
+    }
+    return playerSecretCode;
 }
 
-bool checkSameValue(int value, int arr[], int index) {
+bool checkSameValue(char value, string code, int index) {
+    for (int i = 0; i < index; i++) {
+        if (value == code[i]) {
+            return true;
+        }
+    }
+    return false;
+}
 
-	for (int i = 0; i < index; i++) {
-		if (value == arr[i]) {
-			return true;
-		}
-	}
-	return false;
+void printMenu() {
+	cout << endl;
+    cout << "==========================================" << endl;
+    cout << "        Welcome to Bulls and Cows!" << endl;
+    cout << "==========================================" << endl;
+    cout << "Rules: " << endl;
+    cout << "1. You and the AI will each choose a 4-digit secret code." << endl;
+    cout << "2. Each digit must be unique and between 0 and 9." << endl;
+    cout << "3. You will try to guess the AI's code, and the AI will try to guess yours." << endl;
+    cout << "4. After each guess, you'll be told how many Bulls and Cows you got:" << endl;
+    cout << "   - Bulls: Correct digit in the correct position." << endl;
+    cout << "   - Cows:  Correct digit in the wrong position." << endl;
+    cout << "5. Each side has a maximum of 7 guesses." << endl;
+    cout << "   - If neither side guesses the correct answer within 7 attempts," << endl;
+    cout << "     the game ends in draw." << endl;
+    cout << "Let's start!" << endl << endl;
 }
