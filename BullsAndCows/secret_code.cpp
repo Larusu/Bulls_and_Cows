@@ -23,47 +23,48 @@ int* generateAiSecretCode(int size) {
 	return number;
 }
 
-int* getPlayerSecretCode(int size) {
+int* getPlayerSecretCode(int size) {  
 
-	int* secretCode = new int[size];
-	int input;
-	int index = 0;
+	int* secretCode = new int[size];  
+	int input;  
 
-	while (index < size) {
-		cout << "Your code: ";
-		cin >> input;
-		
-		if (input < 1000 || input > 9999) {
-			cout << "Please enter a 4-digit number." << endl;
-			continue;
-		}
+	while (true) {  
+		cout << "Your code: ";  
+		cin >> input;  
+
+		if (input < 1000 || input > 9999) {  
+			cout << "Please enter a 4-digit number." << endl;  
+			continue;  
+		}  
+
+		for (int i = size - 1; i >= 0; i--) {  
+			secretCode[i] = input % 10;  
+			input /= 10;  
+		}  
+
 		bool duplicate = false;
-
-		for (int i = size - 1; i >= 0; i--) {
-
-			int digit = input % 10;
-			secretCode[i] = digit;
-			input /= 10;
-
-			if (checkSameValue(digit, secretCode, i)) {
+		for (int i = 0; i < size; i++) {
+			if (checkSameValue(secretCode[i], secretCode, i)) {
 				duplicate = true;
 				break;
 			}
 		}
-		index++;
 
-		if (duplicate) {
-			cout << "Please enter a code with unique digits." << endl;
-			index--;
-			continue;
-		}
-	}
-	return secretCode;
+		if (duplicate) {  
+			cout << "Please enter a code with unique digits." << endl;  
+			continue;  
+		}  
+		break;  
+	}  
+	return secretCode;  
 }
 
 bool checkSameValue(int value, int arr[], int index) {
 
 	for (int i = 0; i < index; i++) {
+		if (arr[i] == '\0') {
+			continue;
+		}
 		if (value == arr[i]) {
 			return true;
 		}
