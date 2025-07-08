@@ -32,10 +32,32 @@ int* getPlayerSecretCode(int size) {
 	while (index < size) {
 		cout << "Your code: ";
 		cin >> input;
+		
+		if (input < 1000 || input > 9999) {
+			cout << "Please enter a 4-digit number." << endl;
+			continue;
+		}
+		bool duplicate = false;
 
+		for (int i = size - 1; i >= 0; i--) {
+
+			int digit = input % 10;
+			secretCode[i] = digit;
+			input /= 10;
+
+			if (checkSameValue(digit, secretCode, i)) {
+				duplicate = true;
+				break;
+			}
+		}
 		index++;
-	}
 
+		if (duplicate) {
+			cout << "Please enter a code with unique digits." << endl;
+			index--;
+			continue;
+		}
+	}
 	return secretCode;
 }
 
