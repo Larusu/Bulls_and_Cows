@@ -31,7 +31,15 @@ void setupGame() {
 
     while (true) {
         cout << "Choose secret code length: ";
-        cin >> codeLength; cin.ignore();
+        cin >> codeLength;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore();
+            cout << "Invalid input. Must be a number. \n";
+            codeLength = 0;
+            continue;
+        }
+        cin.ignore();
 
         if (codeLength > 9 || codeLength < 4) {
             cout << "Invalid input! Length must only be 4 - 9." << endl;
@@ -74,16 +82,16 @@ void startGame(int length) {
         cout << "Ai's Bull: " << bullAi << endl;
         cout << "Ai's Cow: " << cowAi << endl;
 
-        if (count == 7) {
-            cout << "\nNobody wins. The game is draw!" << endl;
+        if (bullAi == 4) {
+            cout << "\nUnfortunately, the Ai won!" << endl;
             break;
         }
         else if (bullPlayer == 4) {
             cout << "\nCongratulations! You won!" << endl;
             break;
         }
-        else if (bullAi == 4) {
-            cout << "\nUnfortunately, the Ai won!" << endl;
+        else if (count == 7) {
+            cout << "\nNobody wins. The game is draw!" << endl;
             break;
         }
         count++;
