@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <ctime>
 
-using namespace std;  
+using namespace std;
 
 string generateAiSecretCode(int digitCount);
 string getPlayerSecretCode(int digitCount);
@@ -52,7 +52,7 @@ void startGame(int length) {
     string playerGuess, aiGuess;
     int count = 1;
     int bullPlayer, cowPlayer, bullAi, cowAi;
-    
+
     while (true) {
         cout << "=============================" << endl;
         cout << "Guess #" << count << endl;
@@ -68,13 +68,13 @@ void startGame(int length) {
         cowPlayer = countBullCow(playerGuess, aiSecretCode, "cow");
         bullAi = countBullCow(aiGuess, playerSecretCode, "bull");
         cowAi = countBullCow(aiGuess, playerSecretCode, "cow");
-        
+
         cout << "\nPlayer's Bull: " << bullPlayer << endl;
         cout << "Player's Cow: " << cowPlayer << endl;
         cout << "Ai's Bull: " << bullAi << endl;
         cout << "Ai's Cow: " << cowAi << endl;
 
-        if(count == 7){
+        if (count == 7) {
             cout << "\nNobody wins. The game is draw!" << endl;
             break;
         }
@@ -93,8 +93,8 @@ void startGame(int length) {
 }
 
 int countBullCow(string input, string secretCode, string returnType) {
-    
-    int bull = 0, cow = 0; 
+
+    int bull = 0, cow = 0;
     for (int i = 0; i < input.length(); i++) {
         for (int j = 0; j < secretCode.length(); j++) {
             if (i == j && input[i] == secretCode[j]) {
@@ -107,7 +107,7 @@ int countBullCow(string input, string secretCode, string returnType) {
             }
         }
     }
-    if (returnType == "bull") return bull; 
+    if (returnType == "bull") return bull;
     return cow;
 }
 
@@ -147,7 +147,7 @@ string getPlayerSecretCode(int digitCount) {
             cout << "Digits must be unique.\n";
             continue;
         }
-		return playerSecretCode;
+        return playerSecretCode;
     }
 }
 
