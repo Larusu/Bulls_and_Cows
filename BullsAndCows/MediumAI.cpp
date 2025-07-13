@@ -12,18 +12,21 @@
 
 using namespace std;
 
-struct GameSetting{
+struct GameSetting
+{
     int length;
     int maxGuesses = 7;
     int difficulty = 1; // 1 easy, 2 medium, 3 hard
 };
-struct GameState {
+struct GameState 
+{
     string playerSecretCode;
     string aiSecretCode;
     vector<string> aiGuesses;
     int turn = 1;
 };
-struct AiGuessInfo {
+struct AiGuessInfo 
+{
     int bull;
     int cow;
 };
@@ -35,7 +38,7 @@ void printMenu(const GameSetting& setting);
 int countGuess(string input, string secretCode, string returnType);
 string generateUniqueDigitCode(int length);
 string getPlayerSecretCode(int length);
-void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo> info);
+void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo>& info);
 bool checkWinningCondition(int pBull, int aiBull, int length, int round);
 bool validationDigitCode(string code, int length);
 bool hasDuplicateDigits(string code);
@@ -44,7 +47,8 @@ int main()
 {
     srand(time(0));
     char choice;
-    do {
+    do 
+    {
         setupGame();
 
         cout << "Play another game? (y/n): ";
@@ -52,17 +56,19 @@ int main()
     } while (tolower(choice) == 'y');
 }
 
-void setupGame() {
-
+void setupGame()
+{
     GameSetting settings;
     GameState state;
     AiGuessInfo aiGuess;
     printMenu(settings);
 
-    while (settings.length == 0) {
+    while (settings.length == 0) 
+    {
         cout << "Choose secret code length: ";
         cin >> settings.length;
-        if (cin.fail()) {
+        if (cin.fail()) 
+        {
             cin.clear();
             cin.ignore();
             cout << "Invalid input. Must be a number. \n";
@@ -71,16 +77,19 @@ void setupGame() {
         }
         cin.ignore();
 
-        if (settings.length > 9 || settings.length < 4) {
+        if (settings.length > 9 || settings.length < 4) 
+        {
             cout << "Invalid input! Length must only be 4 - 9." << endl;
             settings.length = 0;
         }
     }
 
-    while (settings.difficulty != 1 && settings.difficulty != 2) {
+    while (settings.difficulty != 1 && settings.difficulty != 2) 
+    {
         cout << "Choose the difficulty of the game (1 for easy, 2 for hard): ";
         cin >> settings.difficulty; 
-        if (cin.fail()) {
+        if (cin.fail()) 
+        {
             cin.clear();
             cin.ignore();
             cout << "Invalid input. Choose only 1 (Easy) or 2 (Medium). \n";
@@ -88,7 +97,8 @@ void setupGame() {
         }
         cin.ignore();
 
-        if (settings.difficulty < 1 || settings.difficulty > 2) {
+        if (settings.difficulty < 1 || settings.difficulty > 2) 
+        {
             cout << "Choose only 1 or 2";
         }
     }
@@ -96,17 +106,19 @@ void setupGame() {
     state.aiSecretCode = generateUniqueDigitCode(settings.length);
     state.playerSecretCode = getPlayerSecretCode(settings.length);
 
-    switch (settings.difficulty) {
-    case 1: startEasyGame(settings, state); break;
-    case 2: startMediumGame(settings, state, aiGuess); break;
+    switch (settings.difficulty) 
+    {
+        case 1: startEasyGame(settings, state); break;
+        case 2: startMediumGame(settings, state, aiGuess); break;
     }
 }
 
-void startEasyGame(const GameSetting& game, GameState& state) {
-
+void startEasyGame(const GameSetting& game, GameState& state) 
+{
     string playerGuess, aiGuess;
 
-    while (state.turn <= 7) {
+    while (state.turn <= 7) 
+    {
         int bullPlayer, cowPlayer, bullAi, cowAi;
         cout << "=============================" << endl;
         cout << "Guess #" << state.turn << endl;
@@ -136,12 +148,13 @@ void startEasyGame(const GameSetting& game, GameState& state) {
     cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
 }
 
-void startMediumGame(const GameSetting& game, GameState& state, AiGuessInfo& aiInfo) {
-
+void startMediumGame(const GameSetting& game, GameState& state, AiGuessInfo& aiInfo) 
+{
     string playerGuess, aiGuess;
     vector<AiGuessInfo> aiHistory;
 
-    while (state.turn <= 7) {
+    while (state.turn <= 7) 
+    {
         int bullPlayer, cowPlayer, bullAi, cowAi;
         cout << "=============================" << endl;
         cout << "Guess #" << state.turn << endl;
@@ -170,8 +183,8 @@ void startMediumGame(const GameSetting& game, GameState& state, AiGuessInfo& aiI
     }
 }
 
-void printMenu(const GameSetting& game) {
-
+void printMenu(const GameSetting& game) 
+{
     cout << endl;
     cout << "==========================================" << endl;
     cout << "        Welcome to Bulls and Cows!" << endl;
@@ -191,17 +204,20 @@ void printMenu(const GameSetting& game) {
     cout << "Let's start!" << endl << endl;
 }
 
-int countGuess(string input, string secretCode, string returnType) {
-
+int countGuess(string input, string secretCode, string returnType) 
+{
     int bull = 0, cow = 0;
 
     for (int i = 0; i < input.length(); i++) {
-        for (int j = 0; j < secretCode.length(); j++) {
-            if (i == j && input[i] == secretCode[j]) {
+        for (int j = 0; j < secretCode.length(); j++) 
+        {
+            if (i == j && input[i] == secretCode[j]) 
+            {
                 bull++;
                 break;
             }
-            else if (input[i] == secretCode[j]) {
+            else if (input[i] == secretCode[j]) 
+            {
                 cow++;
                 break;
             }
@@ -211,47 +227,53 @@ int countGuess(string input, string secretCode, string returnType) {
     return cow;
 }
 
-void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo> info) {
-
+void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo>& info) 
+{
     int turn = state.turn - 1;
-    if (turn == 0) {
+    if (turn == 0) 
+    {
         state.aiSecretCode = generateUniqueDigitCode(length);
         state.aiGuesses.push_back(state.aiSecretCode);
         return;
     }
 
-    while (state.aiGuesses[turn].length() < length) {
-
-        if (info[turn].bull == 0 && info[turn].cow == 0) {
+    while (state.aiGuesses[turn].length() < length) 
+    {
+        if (info[turn].bull == 0 && info[turn].cow == 0) 
+        {
             state.aiSecretCode = generateUniqueDigitCode(length);
             state.aiGuesses.push_back(state.aiSecretCode);
             return;
         }
-        if (info[turn].bull > 0 && info[turn].bull < 4) {
+        if (info[turn].bull > 0 && info[turn].bull < 4) 
+        {
 
         }
     }
 }
 
-string generateUniqueDigitCode(int length) {
-
+string generateUniqueDigitCode(int length) 
+{
     string RandomCode = "";
 
-    while (RandomCode.length() < length) {
+    while (RandomCode.length() < length) 
+    {
         char random = (rand() % 10) + '0';
 
-        if (RandomCode.find(random) == string::npos) {
+        if (RandomCode.find(random) == string::npos)
+        {
             RandomCode += random;
         }
     }
     return RandomCode;
 }
 
-string getPlayerSecretCode(int length) {
-
+string getPlayerSecretCode(int length) 
+{
     string playerSecretCode;
 
-    while (playerSecretCode.empty()) {
+    while (playerSecretCode.empty()) 
+    {
         cout << "Enter your secret code (" << length << " unique digits): ";
         cin >> playerSecretCode; cin.ignore();
 
@@ -262,30 +284,36 @@ string getPlayerSecretCode(int length) {
     return playerSecretCode;
 }
 
-bool checkWinningCondition(int pBull, int aiBull, int length, int round) {
-
-    if (pBull == length) {
+bool checkWinningCondition(int pBull, int aiBull, int length, int round) 
+{
+    if (pBull == length) 
+    {
         cout << "\nCongratulations! You won!" << endl;
         return true;
     }
-    else if (pBull == length) {
+    else if (pBull == length) 
+    {
         cout << "\nCongratulations! You won!" << endl;
         return true;
     }
-    else if (round == length) {
+    else if (round == length) 
+    {
         return true;
     }
     return false;
 }
 
-bool validationDigitCode(string code, int length) {
-
-    if (code.length() != length) {
+bool validationDigitCode(string code, int length) 
+{
+    if (code.length() != length) 
+    {
         cout << "Invalid length. Try again.\n";
         return false;
     }
-    for (int i = 0; i < code.length(); i++) {
-        if (code[i] < '0' || code[i] > '9') {
+    for (int i = 0; i < code.length(); i++) 
+    {
+        if (code[i] < '0' || code[i] > '9') 
+        {
             cout << "Input must contain only digits. \n";
             return false;
         }
@@ -293,11 +321,14 @@ bool validationDigitCode(string code, int length) {
     return true;
 }
 
-bool hasDuplicateDigits(string code) {
-
-    for (int i = 0; i < code.length(); i++) {
-        for (int j = 0; j < i; j++) {
-            if (code[i] == code[j]) {
+bool hasDuplicateDigits(string code) 
+{
+    for (int i = 0; i < code.length(); i++) 
+    {
+        for (int j = 0; j < i; j++) 
+        {
+            if (code[i] == code[j]) 
+            {
                 cout << "Digits must be unique.\n"; 
                 return true;
             }
