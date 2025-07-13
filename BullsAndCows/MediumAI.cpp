@@ -26,7 +26,7 @@ struct GameState
 };
 struct GuessInfo 
 { // Storing Player and Ai bulls and cows
-    string guess;
+    string guess = "";
     int bull;
     int cow;
 };
@@ -37,7 +37,7 @@ void startMediumGame(const GameSetting& game, GameState& state);
 void printMenu(const GameSetting& setting);
 string generateUniqueDigitCode(int length);
 string getPlayerSecretCode(int length);
-void mediumAIGuess(int length, GuessInfo Ai, GameState& state, vector<GuessInfo>& info);
+void mediumAIGuess(int length, GuessInfo& Ai, GameState& state, vector<GuessInfo>& info);
 void getBullsAndCowsForTurn(const GameState& state, GuessInfo& player, GuessInfo& ai, int length);
 bool checkWinningCondition(int pBull, int aiBull, int length, int round);
 bool validationDigitCode(string code, int length);
@@ -238,24 +238,25 @@ void getBullsAndCowsForTurn(const GameState& state, GuessInfo& player, GuessInfo
     }
 }
 
-void mediumAIGuess(int length, GuessInfo Ai, GameState& state, vector<GuessInfo>& info) 
+void mediumAIGuess(int length, GuessInfo& Ai, GameState& state, vector<GuessInfo>& info) 
 {
     vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
     
     int turn = state.turn - 1;
     char newCode[4] = { '\0', '\0', '\0', '\0' };
 
-    if (turn == 0 || (info[turn].bull == 0 && info[turn].cow == 0))
+    // if first turn or last guess had 0 bulls and cows
+    if (turn == 0 || (info[turn].bull + info[turn].cow == 0))
     {
         Ai.guess = generateUniqueDigitCode(length); // Storing new guess into Ai.guess
         return;
     }
 
-
-    for (int i = 0; i < turn; i++)
+    // removing 'digits' elements that were confirmed as wrong
+    for (int i = 0; i <= turn; i++)
     {
-        if (info[i].bull == 0 && info[i].cow == 0) 
-        { // Removing elements, if bulls and cows is 0
+        if (info[i].bull + info[i].cow == 0) 
+        {
             for (char c : info[i].guess)
             {
                 digits.erase(remove(digits.begin(), digits.end(), c), digits.end());
@@ -289,7 +290,7 @@ void mediumAIGuess(int length, GuessInfo Ai, GameState& state, vector<GuessInfo>
     }
     for (int i = 0; i < length; i++) 
     {
-        Ai.guess[i] = newCode[i]; // Storing new guess into Ai.guess
+        Ai.guess += newCode[i]; // Storing new guess into Ai.guess
     }
 }
 
