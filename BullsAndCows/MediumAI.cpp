@@ -19,26 +19,26 @@ struct GameSetting
     int difficulty = 1; // 1 easy, 2 medium, 3 hard
 };
 struct GameState 
-{
+{ // Tracking the progress and storing each secret code
     string playerSecretCode;
     string aiSecretCode;
-    vector<string> aiGuesses;
     int turn = 1;
 };
-struct AiGuessInfo 
-{
+struct GuessInfo 
+{ // Storing Player and Ai bulls and cows
+    string guess;
     int bull;
     int cow;
 };
 
 void setupGame();
 void startEasyGame(const GameSetting& game, GameState& state);
-void startMediumGame(const GameSetting& game, GameState& state, AiGuessInfo& aiInfo);
+void startMediumGame(const GameSetting& game, GameState& state);
 void printMenu(const GameSetting& setting);
-int countGuess(string input, string secretCode, string returnType);
 string generateUniqueDigitCode(int length);
 string getPlayerSecretCode(int length);
-void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo>& info);
+void mediumAIGuess(int length, GuessInfo Ai, GameState& state, vector<GuessInfo>& info);
+void getBullsAndCowsForTurn(const GameState& state, GuessInfo& player, GuessInfo& ai, int length);
 bool checkWinningCondition(int pBull, int aiBull, int length, int round);
 bool validationDigitCode(string code, int length);
 bool hasDuplicateDigits(string code);
@@ -50,17 +50,16 @@ int main()
     do 
     {
         setupGame();
-
         cout << "Play another game? (y/n): ";
         cin >> choice; cin.ignore();
-    } while (tolower(choice) == 'y');
+    } 
+    while (tolower(choice) == 'y');
 }
 
 void setupGame()
-{
+{ // Changing game settings here
     GameSetting settings;
     GameState state;
-    AiGuessInfo aiGuess;
     printMenu(settings);
 
     while (settings.length == 0) 
@@ -103,84 +102,92 @@ void setupGame()
         }
     }
 
+    // Generating Secret Code
     state.aiSecretCode = generateUniqueDigitCode(settings.length);
     state.playerSecretCode = getPlayerSecretCode(settings.length);
 
     switch (settings.difficulty) 
     {
         case 1: startEasyGame(settings, state); break;
-        case 2: startMediumGame(settings, state, aiGuess); break;
+        case 2: startMediumGame(settings, state); break;
     }
 }
 
+// The easy difficulty game itself
 void startEasyGame(const GameSetting& game, GameState& state) 
 {
-    string playerGuess, aiGuess;
+    GuessInfo Player;
+    GuessInfo Ai;
+    int length = game.length;
 
     while (state.turn <= 7) 
     {
-        int bullPlayer, cowPlayer, bullAi, cowAi;
         cout << "=============================" << endl;
         cout << "Guess #" << state.turn << endl;
         cout << "Player Guess: ";
-        cin >> playerGuess; cin.ignore();
+        cin >> Player.guess; cin.ignore();
 
-        if (!validationDigitCode(playerGuess, game.length)) continue;
-        if (hasDuplicateDigits(playerGuess)) continue;
+        // Validations for player input
+        if (!validationDigitCode(Player.guess, length)) continue;
+        if (hasDuplicateDigits(Player.guess)) continue;
 
-        aiGuess = generateUniqueDigitCode(game.length);
-        cout << "AI Guess: " << aiGuess;
+        Ai.guess = generateUniqueDigitCode(length); // Random guess
+        cout << "AI Guess: " << Ai.guess;
 
-        bullPlayer = countGuess(playerGuess, state.aiSecretCode, "bull");
-        cowPlayer = countGuess(playerGuess, state.aiSecretCode, "cow");
-        bullAi = countGuess(aiGuess, state.playerSecretCode, "bull");
-        cowAi = countGuess(aiGuess, state.playerSecretCode, "cow");
+        // Storing data of 'bulls' And 'cows' on Player and Ai
+        getBullsAndCowsForTurn(state, Player, Ai, length); 
 
-        cout << "\nPlayer's Bull: " << bullPlayer << endl;
-        cout << "Player's Cow: " << cowPlayer << endl;
-        cout << "Ai's Bull: " << bullAi << endl;
-        cout << "Ai's Cow: " << cowAi << endl;
+        cout << "\nPlayer's Bull: " << Player.bull << endl;
+        cout << "Player's Cow: " << Player.cow << endl;
+        cout << "Ai's Bull: " << Ai.bull << endl;
+        cout << "Ai's Cow: " << Ai.cow << endl;
 
-        if(checkWinningCondition(bullPlayer, bullAi, game.length, state.turn)) break;
+        if(checkWinningCondition(Player.bull, Ai.bull, length, state.turn)) break;
+
         state.turn++;
     }
     cout << "Player's Secret Code: " << state.playerSecretCode << endl;
     cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
 }
 
-void startMediumGame(const GameSetting& game, GameState& state, AiGuessInfo& aiInfo) 
+// The medium difficulty game itself
+void startMediumGame(const GameSetting& game, GameState& state) 
 {
     string playerGuess, aiGuess;
-    vector<AiGuessInfo> aiHistory;
+    GuessInfo Player;
+    GuessInfo Ai;
+    vector<GuessInfo> aiHistory; // to store the bulls and cows per guess
 
     while (state.turn <= 7) 
     {
-        int bullPlayer, cowPlayer, bullAi, cowAi;
         cout << "=============================" << endl;
         cout << "Guess #" << state.turn << endl;
         cout << "Player Guess: ";
         cin >> playerGuess; cin.ignore();
-
+        // Validations for player input
         if (!validationDigitCode(playerGuess, game.length)) continue;
         if (hasDuplicateDigits(playerGuess)) continue;
 
-        mediumAIGuess(game.length, state, aiHistory);
+        // Storing Ai guess on vector state.aiGuesses
+        mediumAIGuess(game.length, Ai, state, aiHistory); 
         
-        bullPlayer = countGuess(playerGuess, state.aiSecretCode, "bull");
-        cowPlayer = countGuess(playerGuess, state.aiSecretCode, "cow");
-        bullAi = countGuess(aiGuess, state.playerSecretCode, "bull");
-        cowAi = countGuess(aiGuess, state.playerSecretCode, "cow");
+        GuessInfo aiGuessResult = { Ai.guess, Ai.bull, Ai.cow};
+        aiHistory.push_back(aiGuessResult);
 
-        AiGuessInfo aiGuess = { bullAi, cowAi };
-        aiHistory.push_back(aiGuess);
+        // Storing data of 'bulls' And 'cows' on Player and Ai
+        getBullsAndCowsForTurn(state, Player, Ai, game.length);
 
-        cout << "\nPlayer's Bull: " << bullPlayer << endl;
-        cout << "Player's Cow: " << cowPlayer << endl;
-        cout << "Ai's Bull: " << bullAi << endl;
-        cout << "Ai's Cow: " << cowAi << endl;
+        cout << "\nPlayer's Bull: " << Player.bull << endl;
+        cout << "Player's Cow: " << Player.cow << endl;
+        cout << "Ai's Bull: " << Ai.bull << endl;
+        cout << "Ai's Cow: " << Ai.cow << endl;
 
-        if (checkWinningCondition(bullPlayer, bullAi, game.length, state.turn)) break;
+        if (checkWinningCondition(Player.bull, Ai.bull, game.length, state.turn)) break;
+
+        state.turn++;
     }
+    cout << "Player's Secret Code: " << state.playerSecretCode << endl;
+    cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
 }
 
 void printMenu(const GameSetting& game) 
@@ -204,51 +211,85 @@ void printMenu(const GameSetting& game)
     cout << "Let's start!" << endl << endl;
 }
 
-int countGuess(string input, string secretCode, string returnType) 
+void getBullsAndCowsForTurn(const GameState& state, GuessInfo& player, GuessInfo& ai, int length)
 {
-    int bull = 0, cow = 0;
-
-    for (int i = 0; i < input.length(); i++) {
-        for (int j = 0; j < secretCode.length(); j++) 
-        {
-            if (i == j && input[i] == secretCode[j]) 
-            {
-                bull++;
-                break;
-            }
-            else if (input[i] == secretCode[j]) 
-            {
-                cow++;
-                break;
-            }
+    for (int i = 0; i < length; i++) 
+    {
+        if (i == state.aiSecretCode[i] && state.aiSecretCode[i] == player.guess[i])
+        { // checkign for player's bull
+            player.bull++; continue;
+        }
+        for (int j = 0; j < length; j++) 
+        { // checking for player's cow
+            if (player.guess[i] == state.aiSecretCode[j]) player.cow++; break; 
         }
     }
-    if (returnType == "bull") return bull;
-    return cow;
+
+    for (int i = 0; i < length; i++) 
+    { 
+        if (i == state.playerSecretCode[i] && state.playerSecretCode[i] == ai.guess[i])
+        { // checking for ai's bull
+            ai.bull++;  continue;
+        }
+        for (int j = 0; j < length; j++)
+        { // checking for ai's cow
+            if (ai.guess[i] == state.playerSecretCode[j]) ai.cow++; break;
+        }
+    }
 }
 
-void mediumAIGuess(int length, GameState& state, vector<AiGuessInfo>& info) 
+void mediumAIGuess(int length, GuessInfo Ai, GameState& state, vector<GuessInfo>& info) 
 {
+    vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    
     int turn = state.turn - 1;
-    if (turn == 0) 
+    char newCode[4] = { '\0', '\0', '\0', '\0' };
+
+    if (turn == 0 || (info[turn].bull == 0 && info[turn].cow == 0))
     {
-        state.aiSecretCode = generateUniqueDigitCode(length);
-        state.aiGuesses.push_back(state.aiSecretCode);
+        Ai.guess = generateUniqueDigitCode(length); // Storing new guess into Ai.guess
         return;
     }
 
-    while (state.aiGuesses[turn].length() < length) 
-    {
-        if (info[turn].bull == 0 && info[turn].cow == 0) 
-        {
-            state.aiSecretCode = generateUniqueDigitCode(length);
-            state.aiGuesses.push_back(state.aiSecretCode);
-            return;
-        }
-        if (info[turn].bull > 0 && info[turn].bull < 4) 
-        {
 
+    for (int i = 0; i < turn; i++)
+    {
+        if (info[i].bull == 0 && info[i].cow == 0) 
+        { // Removing elements, if bulls and cows is 0
+            for (char c : info[i].guess)
+            {
+                digits.erase(remove(digits.begin(), digits.end(), c), digits.end());
+            }
         }
+    }
+
+    // For generating new guess
+    for(int i = 0; i < length; i++)
+    {
+        if (newCode[i] != '\0') continue;
+
+        int random = rand() % digits.size();
+        char digit = digits[random];
+
+        bool duplicate = false;
+        for (int j = 0; j < i; j++) 
+        {
+            if (newCode[j] == digit) 
+            {
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate) 
+        {
+            newCode[i] = digit;
+            continue;
+        }
+        i--;
+    }
+    for (int i = 0; i < length; i++) 
+    {
+        Ai.guess[i] = newCode[i]; // Storing new guess into Ai.guess
     }
 }
 
