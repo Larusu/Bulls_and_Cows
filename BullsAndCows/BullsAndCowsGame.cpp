@@ -38,10 +38,10 @@ string generateMediumAiCode(GameState& state, vector<string>& history, int lengt
 pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length); // Returns bulls and cows as a pair
 bool checkWinningCondition(const GameSetting& setting, GameState& state, int pBull, int aiBull); // Checks if someone won or if it's a draw
 
-// Utilities
+// Utility function
 string generateUniqueDigitCode(int length);                             // Generates a unique-digit random code
 string getPlayerSecretCode(int length);                                 // Prompts player's secret code
-bool validationDigitCode(string code, int length);                      // Checks for input's correct length and digit
+bool isValidDigitCode(string code, int length);                         // Checks for input's correct length and digit
 bool hasDuplicateDigits(string code);                                   // Checks for duplicate digits
 
 
@@ -49,14 +49,15 @@ int main()
 {
     srand(time(0));
 
+    // Initializing game setting  and state
     GameSetting settings;
     GameState state;
     char choice;
 
-    printMenu(settings); // Print rules of the game
+    printMenu(settings); // Display the game rules
     do
     {
-        setupGame(settings, state);
+        setupGame(settings, state); // Set up and play the game
         cout << "Play another game? (y/n): ";
         cin >> choice; cin.ignore();
     } while (tolower(choice) == 'y');
@@ -108,7 +109,7 @@ void startGame(const GameSetting& setting, GameState& state)
         cin.ignore();
 
         // Validate input length and uniqueness
-        if (!validationDigitCode(pGuess, setting.maxCodeLength)) continue;
+        if (!isValidDigitCode(pGuess, setting.maxCodeLength)) continue;
         if (hasDuplicateDigits(pGuess)) continue;
 
         // Checking difficulty: 1 = easy, 2 = medium
@@ -297,13 +298,13 @@ string getPlayerSecretCode(int length)
         cin >> playerSecretCode; cin.ignore();
 
         // Validate input length and uniqueness
-        if (!validationDigitCode(playerSecretCode, length)) continue;
+        if (!isValidDigitCode(playerSecretCode, length)) continue;
         if (hasDuplicateDigits(playerSecretCode)) continue;
     }
     return playerSecretCode;
 }
 
-bool validationDigitCode(string code, int length)
+bool isValidDigitCode(string code, int length)
 {
     if (code.length() != length)
     {
