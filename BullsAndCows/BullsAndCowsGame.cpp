@@ -76,7 +76,7 @@ void setupGame(GameSetting& settings, GameState& state)
     switch (settings.difficulty)
     {
     case 1: cout << "Test easy!" << endl; break;
-    case 2: cout << "Test Medium!" << endl; break;
+    case 2: startMediumGame(settings, state); break;
     /*case 1: startEasyGame(settings, state); break;
     case 2: startMediumGame(settings, state); break;*/
     }
@@ -112,6 +112,40 @@ void startEasyGame(const GameSetting& setting, GameState& state)
         if (checkWinningCondition(playerResult.first, aiResult.first, setting.length, state.turn)) break;
 
         state.turn++;
+    }
+    cout << "Player's Secret Code: " << state.playerSecretCode << endl;
+    cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
+}
+
+void startMediumGame(const GameSetting& setting, GameState& state) {
+    string pGuess, aiGuess;
+
+    while (state.turn <= setting.maxGuesses) {
+        cout << "==============================" << endl;
+        cout << "Guess #" << state.turn << endl;
+        cout << "Player guess: ";
+        cin >> pGuess; cin.ignore();
+
+        if (!validationDigitCode(pGuess, setting.length)) continue;
+        if (hasDuplicateDigits(pGuess)) continue;
+
+        aiGuess = generateUniqueDigitCode(setting.length);
+        cout << "AI guess: " << aiGuess << endl;
+
+        auto playerResult = getResultCowAndBull(state, pGuess, setting.length);
+        auto aiResult = getResultCowAndBull(state, aiGuess, setting.length);
+
+        cout << "\nPlayer's Bull: " << playerResult.first << endl;
+        cout << "Player's Cow: " << playerResult.second << endl;
+        cout << "Ai's Bull: " << aiResult.first << endl;
+        cout << "Ai's Cow: " << aiResult.second << endl;
+
+        if (checkWinningCondition(playerResult.first, aiResult.first, setting.length, state.turn)) break;
+
+        state.turn++;
+    }
+    if (state.turn > setting.maxGuesses) {
+        cout << "\n Game ended in a draw!\n";
     }
     cout << "Player's Secret Code: " << state.playerSecretCode << endl;
     cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
@@ -193,9 +227,9 @@ bool checkWinningCondition(int pBull, int aiBull, int length, int round)
         cout << "\nCongratulations! You won!" << endl;
         return true;
     }
-    else if (pBull == length)
+    else if (aiBull == length)
     {
-        cout << "\nCongratulations! You won!" << endl;
+        cout << "\nYou lost! Betterluck next time!" << endl;
         return true;
     }
     else if (round == length)
