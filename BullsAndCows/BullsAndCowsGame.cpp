@@ -23,6 +23,7 @@ struct GameState
 void setupGame(GameSetting& settings, GameState& state);
 void printMenu(const GameSetting& game);
 string generateUniqueDigitCode(int length);
+string getPlayerSecretCode(int length);
 bool validationDigitCode(string code, int length);
 bool hasDuplicateDigits(string code);
 
@@ -43,11 +44,10 @@ int main()
     } while (tolower(choice) == 'y');
 }
 
+// Changing game settings here
 void setupGame(GameSetting& settings, GameState& state)
-{ // Changing game settings here
-    
-    
-    while (settings.difficulty != 1 && settings.difficulty != 2)
+{ 
+    while (true)
     {
         cout << "Choose the difficulty of the game (1 for easy, 2 for medium): ";
         cin >> settings.difficulty;
@@ -64,6 +64,7 @@ void setupGame(GameSetting& settings, GameState& state)
         {
             cout << "Choose only 1 or 2";
         }
+        break;
     }
 
     // Generating Secret Code
@@ -72,8 +73,10 @@ void setupGame(GameSetting& settings, GameState& state)
 
     switch (settings.difficulty)
     {
-    case 1: startEasyGame(settings, state); break;
-    case 2: startMediumGame(settings, state); break;
+    case 1: cout << "Test easy!" << endl; break;
+    case 2: cout << "Test Medium!" << endl; break;
+    /*case 1: startEasyGame(settings, state); break;
+    case 2: startMediumGame(settings, state); break;*/
     }
 }
 
@@ -108,7 +111,6 @@ string getPlayerSecretCode(int length)
     }
     return playerSecretCode;
 }
-
 
 void printMenu(const GameSetting& game)
 {
