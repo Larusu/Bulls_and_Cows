@@ -91,7 +91,13 @@ void setupGame(GameSetting& gameSettings, GameState& gameState)
     gameState.aiSecretCode = generateUniqueDigitCode(gameSettings.maxCodeLength);
     gameState.playerSecretCode = getPlayerSecretCode(gameSettings.maxCodeLength);
 
-    startGame(gameSettings, gameState);
+    switch (settings.difficulty)
+    {
+    case 1: startEasyGame(settings, state); break;
+    case 2: cout << "Test Medium!" << endl; break;
+    /*case 1: startEasyGame(settings, state); break;
+    case 2: startMediumGame(settings, state); break;*/
+    }
 }
 
 // Where the game starts
@@ -129,7 +135,6 @@ void startGame(const GameSetting& setting, GameState& state)
         auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.maxCodeLength);
         auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.maxCodeLength);
 
-        // Printing results
         cout << "\nPlayer's Bull: " << playerResult.first << endl;
         cout << "Player's Cow: " << playerResult.second << endl;
         cout << "Ai's Bull: " << aiResult.first << endl;
@@ -213,7 +218,8 @@ string generateMediumAiCode(GameState& state, vector<string>& history, int lengt
         }
         index++;
     }
-    return RandomCode;
+    cout << "Player's Secret Code: " << state.playerSecretCode << endl;
+    cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
 }
 
 // Returning a pair of integers: (bulls, cows)
@@ -301,6 +307,45 @@ string getPlayerSecretCode(int length)
         if (hasDuplicateDigits(playerSecretCode)) continue;
     }
     return playerSecretCode;
+}
+
+void printMenu(const GameSetting& game)
+{
+    cout << endl;
+    cout << "==========================================" << endl;
+    cout << "        Welcome to Bulls and Cows!" << endl;
+    cout << "==========================================" << endl;
+    cout << "Rules: " << endl;
+    cout << "1. You need to choose the difficulty of the game (Easy, Medium). " << endl;
+    cout << "2. You and the AI will each guess each other secret code." << endl;
+    cout << "3. Each digit must be unique and between 0 and 9." << endl;
+    cout << "4. You will try to guess the AI's code, and the AI will try to guess yours." << endl;
+    cout << "5. After each guess, you'll be told how many Bulls and Cows you got:" << endl;
+    cout << "   - Bulls: Correct digit in the correct position." << endl;
+    cout << "   - Cows:  Correct digit in the wrong position." << endl;
+    cout << "6. Each side has a maximum of " << game.maxGuesses << " guesses." << endl;
+    cout << "   - If neither side guesses the correct answer within " << game.maxGuesses << " attempts," << endl;
+    cout << "     the game ends in draw." << endl;
+    cout << "Let's start!" << endl << endl;
+}
+
+bool checkWinningCondition(int pBull, int aiBull, int length, int round)
+{
+    if (pBull == length)
+    {
+        cout << "\nCongratulations! You won!" << endl;
+        return true;
+    }
+    else if (pBull == length)
+    {
+        cout << "\nCongratulations! You won!" << endl;
+        return true;
+    }
+    else if (round == length)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool validationDigitCode(string code, int length)
