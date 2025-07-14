@@ -4,6 +4,8 @@
 #include <ctime>
 #include <vector>
 
+using namespace std;
+
 struct GameSetting
 {
     int length = 4;
@@ -19,8 +21,10 @@ struct GameState
 };
 
 void setupGame(GameSetting& settings, GameState& state);
-void printMenu(int length);
+void printMenu(const GameSetting& game);
 string generateUniqueDigitCode(int length);
+bool validationDigitCode(string code, int length);
+bool hasDuplicateDigits(string code);
 
 int main()
 {
@@ -30,7 +34,7 @@ int main()
     GameState state;
     char choice;
 
-    printMenu(settings.length);
+    printMenu(settings);
     do
     {
         setupGame(settings, state);
@@ -89,7 +93,24 @@ string generateUniqueDigitCode(int length)
     return RandomCode;
 }
 
-void printMenu(int length)
+string getPlayerSecretCode(int length)
+{
+    string playerSecretCode;
+
+    while (playerSecretCode.empty())
+    {
+        cout << "Enter your secret code (" << length << " unique digits): ";
+        cin >> playerSecretCode; cin.ignore();
+
+        if (!validationDigitCode(playerSecretCode, length)) continue;
+
+        if (hasDuplicateDigits(playerSecretCode)) continue;
+    }
+    return playerSecretCode;
+}
+
+
+void printMenu(const GameSetting& game)
 {
     cout << endl;
     cout << "==========================================" << endl;
@@ -107,4 +128,38 @@ void printMenu(int length)
     cout << "   - If neither side guesses the correct answer within " << game.maxGuesses << " attempts," << endl;
     cout << "     the game ends in draw." << endl;
     cout << "Let's start!" << endl << endl;
+}
+
+bool validationDigitCode(string code, int length)
+{
+    if (code.length() != length)
+    {
+        cout << "Invalid length. Try again.\n";
+        return false;
+    }
+    for (int i = 0; i < code.length(); i++)
+    {
+        if (code[i] < '0' || code[i] > '9')
+        {
+            cout << "Input must contain only digits. \n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool hasDuplicateDigits(string code)
+{
+    for (int i = 0; i < code.length(); i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            if (code[i] == code[j])
+            {
+                cout << "Digits must be unique.\n";
+                return true;
+            }
+        }
+    }
+    return false;
 }
