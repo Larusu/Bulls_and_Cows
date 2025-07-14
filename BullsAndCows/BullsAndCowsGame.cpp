@@ -7,29 +7,43 @@
 
 using namespace std;
 
+// For tweaking game settings
 struct GameSetting
 {
-    int length = 4;
+    const int maxCodeLength = 4; // Adjust this value for harder difficulty
     int maxGuesses = 7;
-    int difficulty = 1; // 1 easy, 2 medium, 3 hard
+    int difficulty = 1; // 1 = easy, 2 = medium, 3 = hard
 };
 
+// For tracking progress and storing each secret code
 struct GameState
-{ // Tracking the progress and storing each secret code
+{ 
     string playerSecretCode;
     string aiSecretCode;
     int turn = 1;
+    int aiScore = 0;
+    int playerScore = 0;
 };
 
-void setupGame(GameSetting& settings, GameState& state);
-void printMenu(const GameSetting& game);
-void startEasyGame(const GameSetting& setting, GameState& state);
-string generateUniqueDigitCode(int length);
-string getPlayerSecretCode(int length);
-pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length);
-bool checkWinningCondition(int pBull, int aiBull, int length, int round);
-bool validationDigitCode(string code, int length);
-bool hasDuplicateDigits(string code);
+// Game Control Flow
+void setupGame(GameSetting& settings, GameState& state);                // Sets up game setting and secret code
+void startGame(const GameSetting& setting, GameState& state);           // Starts the game loop
+void printMenu(const GameSetting& game);                                // Displays main menu
+
+// Ai's
+string generateEasyAiCode(int length);                                  // Generates random code every turn
+string generateMediumAiCode(GameState& state, vector<string>& history, int length);  // Generates non-repeating code
+
+// Game Mechanics
+pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length); // Returns bulls and cows as a pair
+bool checkWinningCondition(const GameSetting& setting, GameState& state,  int pBull, int aiBull); // Checks if someone won or if it's a draw
+
+// Utilities
+string generateUniqueDigitCode(int length);                             // Generates a unique-digit random code
+string getPlayerSecretCode(int length);                                 // Prompts player's secret code
+bool validationDigitCode(string code, int length);                      // Checks for input's correct length and digit
+bool hasDuplicateDigits(string code);                                   // Checks for duplicate digits
+
 
 int main()
 {
@@ -39,7 +53,7 @@ int main()
     GameState state;
     char choice;
 
-    printMenu(settings);
+    printMenu(settings); // Print rules of the game
     do
     {
         setupGame(settings, state);
@@ -49,12 +63,12 @@ int main()
 }
 
 // Changing game settings here
-void setupGame(GameSetting& settings, GameState& state)
+void setupGame(GameSetting& gameSettings, GameState& gameState)
 {
     while (true)
     {
-        cout << "Choose the difficulty of the game (1 for easy, 2 for medium): ";
-        cin >> settings.difficulty;
+        cout << "Choose the difficulty of the game (1 for Easy, 2 for Medium): ";
+        cin >> gameSettings.difficulty;
         if (cin.fail())
         {
             cin.clear();
@@ -64,113 +78,80 @@ void setupGame(GameSetting& settings, GameState& state)
         }
         cin.ignore();
 
-        if (settings.difficulty < 1 || settings.difficulty > 2)
+        if (gameSettings.difficulty < 1 || gameSettings.difficulty > 2)
         {
-            cout << "Choose only 1 or 2";
+            cout << "Choose only 1 or 2. \n";
+            continue;
         }
+        cin.ignore();
         break;
     }
 
     // Generating Secret Code
-    state.aiSecretCode = generateUniqueDigitCode(settings.length);
-    state.playerSecretCode = getPlayerSecretCode(settings.length);
+    gameState.aiSecretCode = generateUniqueDigitCode(gameSettings.maxCodeLength);
+    gameState.playerSecretCode = getPlayerSecretCode(gameSettings.maxCodeLength);
 
-    switch (settings.difficulty)
-    {
-    case 1: startEasyGame(settings, state); break;
-    case 2: cout << "Test Medium!" << endl; break;
-    /*case 1: startEasyGame(settings, state); break;
-    case 2: startMediumGame(settings, state); break;*/
-    }
+    startGame(gameSettings, gameState);
 }
 
-void startEasyGame(const GameSetting& setting, GameState& state)
+// Where the game starts
+void startGame(const GameSetting& setting, GameState& state)
 {
     string pGuess, aiGuess;
+    vector<string>aiHistoryGuess; // for medium AI, stores past guesses in a vector
 
-    while (state.turn <= 7)
+    while (state.turn <= setting.maxGuesses)
     {
         cout << "=============================" << endl;
         cout << "Guess #" << state.turn << endl;
         cout << "Player Guess: ";
-        cin >> pGuess; cin.ignore();
+        cin >> pGuess; 
+        cin.ignore();
 
-        // Validations for player input
-        if (!validationDigitCode(pGuess, setting.length)) continue;
+        // Validate input length and uniqueness
+        if (!validationDigitCode(pGuess, setting.maxCodeLength)) continue;
         if (hasDuplicateDigits(pGuess)) continue;
 
-        aiGuess = generateUniqueDigitCode(setting.length); // Random guess
+        // Checking difficulty: 1 = easy, 2 = medium
+        switch (setting.difficulty)
+        {
+        case 1 : 
+            aiGuess = generateEasyAiCode(setting.maxCodeLength);
+            break;
+        case 2 : 
+            aiGuess = generateMediumAiCode(state, aiHistoryGuess, setting.maxCodeLength);
+            aiHistoryGuess.push_back(aiGuess);
+            break;
+        }
         cout << "AI Guess: " << aiGuess;
 
-        // first = bull, second = cow
-        auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.length);
-        auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.length);
+        // Calculating number of bulls and cows. Access with .first (bulls), .second (cows)        
+        auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.maxCodeLength);
+        auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.maxCodeLength);
 
+        // Printing results
         cout << "\nPlayer's Bull: " << playerResult.first << endl;
         cout << "Player's Cow: " << playerResult.second << endl;
         cout << "Ai's Bull: " << aiResult.first << endl;
         cout << "Ai's Cow: " << aiResult.second << endl;
 
-        if (checkWinningCondition(playerResult.first, aiResult.first, setting.length, state.turn)) break;
-
-        state.turn++;
-    }
-    cout << "Player's Secret Code: " << state.playerSecretCode << endl;
-    cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
-}
-
-pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length)
-{
-    int cow = 0, bull = 0;
-    for (int i = 0; i < length; i++)
-    {
-        if (secret[i] == guess[i]) // checking for bull
+        // If player or ai wins, or if the game is draw
+        if (checkWinningCondition(setting, state, playerResult.first, aiResult.first))
         {
-            bull++; continue;
+            cout << "Player's Secret Code: " << state.playerSecretCode << endl;
+            cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
+            cout << "\nScore: " << endl;
+            cout << "Player's score: " << state.playerScore << endl;
+            cout << "Ai's score: " << state.aiScore << endl;
+            cout << "==============================" << endl;
+            break;
         }
-        for (int j = 0; j < length; j++)
-        { 
-            if (guess[i] == secret[j] && i != j) // checking for cow
-            {
-                cow++; break;
-            }
-        }
+
+        state.turn++; // move to next turn if no one won
     }
-    return { bull, cow };
 }
 
-string generateUniqueDigitCode(int length)
-{
-    string RandomCode = "";
-
-    while (RandomCode.length() < length)
-    {
-        char random = (rand() % 10) + '0';
-
-        if (RandomCode.find(random) == string::npos)
-        {
-            RandomCode += random;
-        }
-    }
-    return RandomCode;
-}
-
-string getPlayerSecretCode(int length)
-{
-    string playerSecretCode;
-
-    while (playerSecretCode.empty())
-    {
-        cout << "Enter your secret code (" << length << " unique digits): ";
-        cin >> playerSecretCode; cin.ignore();
-
-        if (!validationDigitCode(playerSecretCode, length)) continue;
-
-        if (hasDuplicateDigits(playerSecretCode)) continue;
-    }
-    return playerSecretCode;
-}
-
+// Displaying main menu
 void printMenu(const GameSetting& game)
 {
     cout << endl;
@@ -191,23 +172,135 @@ void printMenu(const GameSetting& game)
     cout << "Let's start!" << endl << endl;
 }
 
-bool checkWinningCondition(int pBull, int aiBull, int length, int round)
+// Generates a new random code each turn (possible but rarely repeats)
+string generateEasyAiCode(int length)
+{ 
+    return generateUniqueDigitCode(length);
+}
+
+// Generates a unique random code that has not been guess by the AI before
+string generateMediumAiCode(GameState& state, vector<string>& history, int length)
 {
-    if (pBull == length)
+    string RandomCode = generateUniqueDigitCode(length);
+
+    // If first turn, generates a unique code
+    if (state.turn == 1)
     {
-        cout << "\nCongratulations! You won!" << endl;
+        return RandomCode;
+    }
+
+    int index = 0;
+    while(index <= state.turn) // Rejecting exact matches from the past guess
+    {
+        string compareTrash = history[index];
+
+        if (!(compareTrash[0] != RandomCode[0] || 
+              compareTrash[1] != RandomCode[1] || 
+              compareTrash[2] != RandomCode[2] || 
+              compareTrash[3] != RandomCode[3]) )
+        {
+            RandomCode = generateUniqueDigitCode(length);
+
+            // For safety, checking if first turn
+            if (state.turn == 1)
+            {
+                index = 0;
+                continue;
+            }
+
+            index--;
+            continue;
+        }
+        index++;
+    }
+    return RandomCode;
+}
+
+// Returning a pair of integers: (bulls, cows)
+pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length)
+{
+    int cow = 0, bull = 0;
+
+    for (int i = 0; i < length; i++)
+    {
+        if (secret[i] == guess[i]) // bull : correct digit and position
+        {
+            bull++; 
+            continue;
+        }
+
+        for (int j = 0; j < length; j++)
+        { 
+            if (guess[i] == secret[j] && i != j) // cow : correct digit but wrong position
+            {
+                cow++; 
+                break;
+            }
+        }
+    }
+    return { bull, cow };
+}
+
+// Returns true if the player or AI wins, or if the game ends in a draw
+bool checkWinningCondition(const GameSetting& setting, GameState& state, int pBull, int aiBull)
+{
+    if (pBull >= setting.maxCodeLength) // Player wins: Player's bull count matches code length
+    {
+        state.playerScore++;
+        cout << "==============================" << endl;
+        cout << "Congratulations! You won!" << endl;
         return true;
     }
-    else if (pBull == length)
+    else if (aiBull >= setting.maxCodeLength) // AI wins: AI's bull count matches code length
     {
-        cout << "\nCongratulations! You won!" << endl;
+        state.aiScore++;
+        cout << "==============================" << endl;
+        cout << "You lost. Better luck next time!" << endl;
         return true;
     }
-    else if (round == length)
+    else if (state.turn >= setting.maxGuesses) // Draw: max number of turns reached
     {
+        cout << "==============================" << endl;
+        cout << "It's a draw! No one wins :(" << endl;
         return true;
     }
-    return false;
+
+    return false; // game continues
+}
+
+// Generates a random code with unique digits
+string generateUniqueDigitCode(int length)
+{
+    string RandomCode = "";
+
+    while (RandomCode.length() < length)
+    {
+        char random = (rand() % 10) + '0'; // random digit from 0 to 9
+
+        // Ensuring digit has haven't used
+        if (RandomCode.find(random) == string::npos)
+        {
+            RandomCode += random;
+        }
+    }
+    return RandomCode;
+}
+
+// Getting a valid secret code from player
+string getPlayerSecretCode(int length)
+{
+    string playerSecretCode;
+
+    while (playerSecretCode.empty())
+    {
+        cout << "Enter your secret code (" << length << " unique digits): ";
+        cin >> playerSecretCode; cin.ignore();
+
+        // Validate input length and uniqueness
+        if (!validationDigitCode(playerSecretCode, length)) continue;
+        if (hasDuplicateDigits(playerSecretCode)) continue;
+    }
+    return playerSecretCode;
 }
 
 bool validationDigitCode(string code, int length)
