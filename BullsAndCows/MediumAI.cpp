@@ -241,6 +241,8 @@ void getBullsAndCowsForTurn(const GameState& state, GuessInfo& player, GuessInfo
 void mediumAIGuess(int length, GuessInfo& Ai, GameState& state, vector<GuessInfo>& info) 
 {
     vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    vector<char> candidates;
+    vector<string> suspectedBull;
     
     int turn = state.turn - 1;
     char newCode[4] = { '\0', '\0', '\0', '\0' };
@@ -264,10 +266,41 @@ void mediumAIGuess(int length, GuessInfo& Ai, GameState& state, vector<GuessInfo
         }
     }
 
+    // Checking bull every turn
+    for (int i = 0; i <= turn; i++)
+    {
+        int r = rand() % 4;
+        for (int j = 0; j < length; j++)
+        {
+            if (info[i].bull > 0 && candidates[j] == info[i].guess[j])
+            {
+                candidates.push_back(info[i].guess[r]);
+            }
+        }
+    }
+
+    // Checking for cows
+    for (int i = 0; i <= turn; i++)
+    {
+        if (info[i].cow + info[i].bull > 0)
+        {
+            for (char c : info[i].guess)
+            {
+                candidates.push_back(c);
+            }
+        }
+    }
+
     // For generating new guess
     for(int i = 0; i < length; i++)
     {
-        if (newCode[i] != '\0') continue;
+        if (newCode[i] == '\0') continue;
+
+        if (!candidates.empty())
+        {
+            newCode[i] = *candidates.begin();
+            candidates.erase(candidates.begin());
+        }
 
         int random = rand() % digits.size();
         char digit = digits[random];
@@ -290,9 +323,41 @@ void mediumAIGuess(int length, GuessInfo& Ai, GameState& state, vector<GuessInfo
     }
     for (int i = 0; i < length; i++) 
     {
-        Ai.guess += newCode[i]; // Storing new guess into Ai.guess
+        Ai.guess += newCode[i];
     }
 }
+
+//void HardAI() 
+//{
+//    for (int i = 0; i < length; i++)
+//    {
+//        char currentGuess = info[turn].guess[i];
+//        for (int j = 0; j < length; j++)
+//        {
+//            if (info[j].bull > 0 && info[j].guess[i] == currentGuess)
+//            {
+//                newCode[i] = currentGuess;
+//                break;
+//            }
+//        }
+//    }
+//if (info[turn].cow > 0)
+//{
+//    for (int i = 0; i < turn - 1; i++)
+//    {
+//        if (info[i].cow > 0)
+//        {
+//            for (int j = 0; j < length; j++)
+//            {
+//                if (info[turn].guess[i] == info[i].guess[j])
+//                {
+//
+//                }
+//            }
+//        }
+//    }
+//}
+//}
 
 string generateUniqueDigitCode(int length) 
 {
