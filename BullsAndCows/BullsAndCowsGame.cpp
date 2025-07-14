@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -22,9 +23,10 @@ struct GameState
 
 void setupGame(GameSetting& settings, GameState& state);
 void printMenu(const GameSetting& game);
+void startEasyGame(const GameSetting& setting, GameState& state);
 string generateUniqueDigitCode(int length);
 string getPlayerSecretCode(int length);
-pair<int, int> getResultCowAndBull(const GameState& state, string guess, int length);
+pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length);
 bool checkWinningCondition(int pBull, int aiBull, int length, int round);
 bool validationDigitCode(string code, int length);
 bool hasDuplicateDigits(string code);
@@ -75,7 +77,7 @@ void setupGame(GameSetting& settings, GameState& state)
 
     switch (settings.difficulty)
     {
-    case 1: cout << "Test easy!" << endl; break;
+    case 1: startEasyGame(settings, state); break;
     case 2: cout << "Test Medium!" << endl; break;
     /*case 1: startEasyGame(settings, state); break;
     case 2: startMediumGame(settings, state); break;*/
@@ -101,8 +103,8 @@ void startEasyGame(const GameSetting& setting, GameState& state)
         cout << "AI Guess: " << aiGuess;
 
         // first = bull, second = cow
-        auto playerResult = getResultCowAndBull(state, pGuess, setting.length);
-        auto aiResult = getResultCowAndBull(state, aiGuess, setting.length);
+        auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.length);
+        auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.length);
 
         cout << "\nPlayer's Bull: " << playerResult.first << endl;
         cout << "Player's Cow: " << playerResult.second << endl;
@@ -117,18 +119,21 @@ void startEasyGame(const GameSetting& setting, GameState& state)
     cout << "Ai's Secret Code:     " << state.aiSecretCode << endl;
 }
 
-pair<int, int> getResultCowAndBull(const GameState& state, string guess, int length)
+pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length)
 {
     int cow = 0, bull = 0;
     for (int i = 0; i < length; i++)
     {
-        if (i == state.aiSecretCode[i] && state.aiSecretCode[i] == guess[i]) // checking for bull
-        { 
+        if (secret[i] == guess[i]) // checking for bull
+        {
             bull++; continue;
         }
         for (int j = 0; j < length; j++)
         { 
-            if (guess[i] == state.aiSecretCode[j]) cow++; break; // checking for cow
+            if (guess[i] == secret[j] && i != j) // checking for cow
+            {
+                cow++; break;
+            }
         }
     }
     return { bull, cow };
