@@ -52,7 +52,8 @@ bool checkWinningCondition(const GameSetting& setting, GameState& state, int pBu
 string generateUniqueDigitCode(int length);                             // Generates a unique-digit random code
 string getPlayerSecretCode(int length);                                 // Prompts player's secret code
 bool isValidDigitCode(string code, int length);                         // Checks for input's correct length and digit
-bool hasDuplicateDigits(string code);                                   // Checks for duplicate digits
+bool hasDuplicateDigits(const string& code);                            // Checks for duplicate digits, only for 0 - 9
+bool hasDuplicateDigits(const string& code, const string& compare);     // Checks for duplicate digits, for 2 strings
 
 
 int main()
@@ -244,16 +245,26 @@ string generateMediumAiCode(GameState& state, vector<string>& history, int lengt
 string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int length)
 {
     string RandomCode(length, '\0'); // initialize with null characters
-    vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-    vector<char> possibleDigits;
-
     int turn = state.turn - 1;
 
-    // For first and second turn, go random to analyze code first
-    if (turn <= 1)
+    // For the first 3 turn, go random for testing data
+    if (turn <= 2)
     {
+        while (turn == 1)
+        {
+            string firstTurn = history[0].guess;
+            RandomCode = generateUniqueDigitCode(length);
+
+            if (!hasDuplicateDigits(RandomCode, firstTurn))
+            {
+                return RandomCode;
+            }
+        }
         return generateUniqueDigitCode(length);
     }
+
+    vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    vector<char> possibleDigits;
 
     // Step 1: eliminating digits that are definitely not in player secret code
     for (int i = 0; i < turn; i++)
@@ -287,7 +298,7 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
     // Step 3: Collect possible cow digits from all past guesses
     for (int i = 0; i < turn; i++)
     {
-        if (history[i].cow > 0)
+        if (history[i].cow + history[i].bull > 0)
         {
             for (char c : history[i].guess)
             {
@@ -440,7 +451,7 @@ bool isValidDigitCode(string code, int length)
     return true;
 }
 
-bool hasDuplicateDigits(string code)
+bool hasDuplicateDigits(const string& code)
 {
     for (int i = 0; i < code.length(); i++)
     {
@@ -451,6 +462,18 @@ bool hasDuplicateDigits(string code)
                 cout << "Digits must be unique.\n";
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+bool hasDuplicateDigits(const string& code, const string& compare)
+{
+    for (char c : code)
+    {
+        if (compare.find(c) != string::npos)
+        {
+            return true;
         }
     }
     return false;
