@@ -40,12 +40,12 @@ void startGame(const GameSetting& setting, GameState& state);           // Start
 void printMenu(const GameSetting& game);                                // Displays main menu
 
 // Ai's
-string generateEasyAiCode(int length);                                  // Generates random code every turn
-string generateMediumAiCode(GameState& state, vector<string>& history, int length);  // Generates non-repeating code
-string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int length); // Generates smart guesses based on history
+string generateEasyAiCode(int length);                                               // Generates random code every turn
+string generateMediumAiCode(const vector<GuessInfo>& history, int turn, int length);  // Generates non-repeating code
+string generateHardAiCode(vector<GuessInfo>& history, int turn, int length);          // Generates smart guesses based on history
 
 // Game Mechanics
-pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length); // Returns bulls and cows as a pair
+pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length);       // Returns bulls and cows as a pair
 bool checkWinningCondition(const GameSetting& setting, GameState& state, int pBull, int aiBull); // Checks if someone won or if it's a draw
 
 // Utility function
@@ -53,7 +53,7 @@ string generateUniqueDigitCode(int length);                             // Gener
 string getPlayerSecretCode(int length);                                 // Prompts player's secret code
 bool isValidDigitCode(string code, int length);                         // Checks for input's correct length and digit
 bool hasDuplicateDigits(const string& code);                            // Checks for duplicate digits, only for 0 - 9
-bool hasDuplicateDigits(const string& code, const string& compare);     // Checks for duplicate digits, for 2 strings
+bool hasDuplicateDigits(const string& code, const string& compare);     // Comparing if 2 strings has duplicate
 
 
 int main()
@@ -120,8 +120,7 @@ void setupGame(GameSetting& gameSettings, GameState& gameState)
 void startGame(const GameSetting& setting, GameState& state)
 {
     string pGuess, aiGuess;
-    vector<string>aiHistoryGuess; // for medium AI: stores all past guesses
-    vector<GuessInfo>aiPastInformation; // for hard AI: stores [all the pastpast guess information (guess, bulls, cows)
+    vector<GuessInfo>aiPastInformation; // for medium and hard AI: stores all the past guess information (guess, bulls, cows)
 
     while (state.turn <= setting.maxGuesses)
     {
@@ -142,11 +141,10 @@ void startGame(const GameSetting& setting, GameState& state)
                 aiGuess = generateEasyAiCode(setting.maxCodeLength);
                 break;
             case 2:
-                aiGuess = generateMediumAiCode(state, aiHistoryGuess, setting.maxCodeLength);
-                aiHistoryGuess.push_back(aiGuess);
+                aiGuess = generateMediumAiCode(aiPastInformation, state.turn, setting.maxCodeLength);
                 break;
             case 3:
-                aiGuess = generateHardAiCode(state, aiPastInformation, setting.maxCodeLength);
+                aiGuess = generateHardAiCode(aiPastInformation, state.turn, setting.maxCodeLength);
                 break;
         }
         cout << "AI Guess: " << aiGuess << endl;
@@ -155,8 +153,8 @@ void startGame(const GameSetting& setting, GameState& state)
         auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.maxCodeLength);
         auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.maxCodeLength);
 
-        // For Hard AI only
-        if (setting.difficulty == 3)
+        // For medium and hard AI: Storing information into aiPastInformation
+        if (setting.difficulty == 2 || setting.difficulty == 3)
         {
             GuessInfo temp = { aiGuess, aiResult.first, aiResult.second };
             aiPastInformation.push_back(temp);
@@ -211,55 +209,16 @@ string generateEasyAiCode(int length)
     return generateUniqueDigitCode(length);
 }
 
-// Generates a unique random code that has not been guess by the AI before
-string generateMediumAiCode(GameState& state, vector<string>& history, int length)
-{
-    string RandomCode = generateUniqueDigitCode(length);
-    int turn = state.turn - 1;
-
-    // If first turn, generates a unique code
-    if (turn == 0)
-    {
-        return RandomCode;
-    }
-
-    int index = 0;
-    while (index < turn) // Rejecting exact matches from the past guess
-    {
-        string compareTrash = history[index];
-
-        if (!(compareTrash[0] != RandomCode[0] ||
-            compareTrash[1] != RandomCode[1] ||
-            compareTrash[2] != RandomCode[2] ||
-            compareTrash[3] != RandomCode[3]))
-        {
-            RandomCode = generateUniqueDigitCode(length);
-
-            // For safety, checking if first turn
-            if (turn == 0)
-            {
-                index = 0;
-                continue;
-            }
-
-            index--;
-            continue;
-        }
-        index++;
-    }
-    return RandomCode;
-}
-
 // Generates a unique random code based on past guesses
-string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int length)
+string generateMediumAiCode(const vector<GuessInfo>& history, int turn,  int length)
 {
     string RandomCode(length, '\0'); // initialize with null characters
-    int turn = state.turn - 1;
+    int round = turn - 1;
 
     // For the first 3 turn, go random for testing data
-    if (turn <= 2)
+    if (round <= 2)
     {
-        while (turn == 1)
+        while (round == 1)
         {
             string firstTurn = history[0].guess;
             RandomCode = generateUniqueDigitCode(length);
@@ -276,7 +235,7 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
     vector<char> possibleDigits;
 
     // Step 1: eliminating digits that are definitely not in player secret code
-    for (int i = 0; i < turn; i++)
+    for (int i = 0; i < round; i++)
     {
         if (history[i].bull + history[i].cow == 0)
         {
@@ -288,14 +247,14 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
     }
 
     // Step 2: Locking bull positions based on repeated bull position
-    for (int i = 0; i < turn - 1; i++)
+    for (int i = 0; i < round - 1; i++)
     {
         for (int j = 0; j < length; j++)
         {
-            char currentGuessChar = history[turn - 1].guess[j];
+            char currentGuessChar = history[round - 1].guess[j];
 
             // If both current and previous guesses have bulls and the digit matches
-            if (history[turn - 1].bull > 0 &&
+            if (history[round - 1].bull > 0 &&
                 history[i].bull > 0 &&
                 history[i].guess[j] == currentGuessChar)
             {
@@ -305,7 +264,7 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
     }
 
     // Step 3: Collect possible cow digits from all past guesses
-    for (int i = 0; i < turn; i++)
+    for (int i = 0; i < round; i++)
     {
         if (history[i].cow + history[i].bull > 0)
         {
@@ -353,6 +312,12 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
         }
     }
     return RandomCode; // Step 5: return final generated AI guess
+}
+
+// Generates a unique random code based on past guesses
+string generateHardAiCode(vector<GuessInfo>& history, int turn, int length)
+{
+    
 }
 
 // Returning a pair of integers: (bulls, cows)
