@@ -4,6 +4,7 @@
 #include <ctime>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 using namespace std;
 
@@ -25,6 +26,14 @@ struct GameState
     int playerScore = 0;
 };
 
+// For tracking each guess along with its bulls and cows count, only for Hard AI
+struct GuessInfo
+{
+    string guess = "";
+    int bull = 0;
+    int cow = 0;
+};
+
 // Game Control Flow
 void setupGame(GameSetting& settings, GameState& state);                // Sets up game setting and secret code
 void startGame(const GameSetting& setting, GameState& state);           // Starts the game loop
@@ -33,6 +42,7 @@ void printMenu(const GameSetting& game);                                // Displ
 // Ai's
 string generateEasyAiCode(int length);                                  // Generates random code every turn
 string generateMediumAiCode(GameState& state, vector<string>& history, int length);  // Generates non-repeating code
+string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int length); // Generates smart guesses based on history
 
 // Game Mechanics
 pair<int, int> getResultCowAndBull(const string& secret, const string& guess, int length); // Returns bulls and cows as a pair
@@ -98,7 +108,8 @@ void setupGame(GameSetting& gameSettings, GameState& gameState)
 void startGame(const GameSetting& setting, GameState& state)
 {
     string pGuess, aiGuess;
-    vector<string>aiHistoryGuess; // for medium AI, stores past guesses in a vector
+    vector<string>aiHistoryGuess; // for medium AI: stores all past guesses
+    vector<GuessInfo>aiPastInformation; // for hard AI: stores [all the pastpast guess information (guess, bulls, cows)
 
     while (state.turn <= setting.maxGuesses)
     {
@@ -122,12 +133,22 @@ void startGame(const GameSetting& setting, GameState& state)
                 aiGuess = generateMediumAiCode(state, aiHistoryGuess, setting.maxCodeLength);
                 aiHistoryGuess.push_back(aiGuess);
                 break;
+            case 3:
+                aiGuess = generateHardAiCode(state, aiPastInformation, setting.maxCodeLength);
+                break;
         }
         cout << "AI Guess: " << aiGuess << endl;
 
         // Calculating number of bulls and cows. Access with .first (bulls), .second (cows)        
         auto playerResult = getResultCowAndBull(state.aiSecretCode, pGuess, setting.maxCodeLength);
         auto aiResult = getResultCowAndBull(state.playerSecretCode, aiGuess, setting.maxCodeLength);
+
+        // For Hard AI only
+        if (setting.difficulty == 3)
+        {
+            GuessInfo temp = { aiGuess, aiResult.first, aiResult.second };
+            aiPastInformation.push_back(temp);
+        }
 
         // Printing results
         cout << "\nPlayer's Bull: " << playerResult.first << endl;
@@ -215,6 +236,101 @@ string generateMediumAiCode(GameState& state, vector<string>& history, int lengt
         index++;
     }
     return RandomCode;
+}
+
+// Generates a unique random code based on past guesses
+string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int length)
+{
+    string RandomCode(length, '\0'); // initialize with null characters
+    vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    vector<char> possibleDigits;
+
+    int turn = state.turn;
+
+    // For first turn, go random
+    if (turn == 0)
+    {
+        return generateUniqueDigitCode(length);
+    }
+
+    // Step 1: eliminating digits that are definitely not in player secret code
+    for (int i = 0; i < turn; i++)
+    {
+        if (history[i].bull + history[i].cow == 0)
+        {
+            for (char c : history[i].guess)
+            {
+                digits.erase(remove(digits.begin(), digits.end(), c), digits.end());
+            }
+        }
+    }
+
+    // Step 2: Locking bull positions based on repeated bull position
+    for (int i = 0; i < turn - 1; i++)
+    {
+        for (int j = 0; j < length; j++)
+        {
+            char currentGuessChar = history[turn - 1].guess[j];
+
+            // If both current and previous guesses have bulls and the digit matches
+            if (history[turn - 1].bull > 0 &&
+                history[i].bull > 0 &&
+                history[i].guess[j] == currentGuessChar)
+            {
+                RandomCode[j] = currentGuessChar;
+            }
+        }
+    }
+
+    // Step 3: Collect possible cow digits from all past guesses
+    for (int i = 0; i < turn; i++)
+    {
+        if (history[i].cow > 0)
+        {
+            for (char c : history[i].guess)
+            {
+                possibleDigits.push_back(c);
+            }
+        }
+    }
+
+    // Remove duplicates from possibleDigits
+    sort(possibleDigits.begin(), possibleDigits.end());
+    possibleDigits.erase(unique(possibleDigits.begin(), possibleDigits.end()), possibleDigits.end());
+
+    // Step 4: Fill remaining empty spots
+    for (int i = 0; i < length; i++)
+    {
+        if (RandomCode[i] != '\0') continue;
+
+        int random;
+        // Step 4.1: Choosing from cow candidates first
+        if (!possibleDigits.empty())
+        {
+            char candidate = possibleDigits[rand() % possibleDigits.size()];
+
+            if (RandomCode.find(candidate) == string::npos)
+            {
+                RandomCode[i] = candidate;
+                digits.erase(remove(digits.begin(), digits.end(), candidate), digits.end()); // preventing duplicates
+                continue;
+            }
+        }
+
+        // Step 4.2: Fill remaining digits
+        while (true)
+        {
+            char random = digits[rand() % digits.size()];
+
+            if (RandomCode.find(random) == string::npos)
+            {
+                RandomCode[i] = random;
+                digits.erase(remove(digits.begin(), digits.end(), random), digits.end()); // preventing duplicates
+                break;
+            }
+        }
+    }
+    return RandomCode; // Step 5: return final generated AI guess
 }
 
 // Returning a pair of integers: (bulls, cows)
