@@ -70,6 +70,8 @@ int main()
         setupGame(settings, state); // Set up and play the game
         cout << "Play another game? (y/n): ";
         cin >> choice; cin.ignore();
+
+        if (tolower(choice) == 'y') state.turn = 1;
     } while (tolower(choice) == 'y');
 }
 
@@ -78,20 +80,20 @@ void setupGame(GameSetting& gameSettings, GameState& gameState)
 {
     while (true)
     {
-        cout << "Choose the difficulty of the game (1 for Easy, 2 for Medium): ";
+        cout << "Choose the difficulty of the game (1 for Easy, 2 for Medium, 3 for Hard): ";
         cin >> gameSettings.difficulty;
         if (cin.fail())
         {
             cin.clear();
             cin.ignore();
-            cout << "Invalid input. Choose only 1 (Easy) or 2 (Medium). \n";
+            cout << "Invalid input. Choose only 1 (Easy), 2 (Medium), or 3 (Hard). \n";
             continue;
         }
         cin.ignore();
 
-        if (gameSettings.difficulty < 1 || gameSettings.difficulty > 2)
+        if (gameSettings.difficulty < 1 || gameSettings.difficulty > 3)
         {
-            cout << "Choose only 1 or 2. \n";
+            cout << "Choose only 1, 2, or 3. \n";
             continue;
         }
         break;
@@ -245,10 +247,10 @@ string generateHardAiCode(GameState& state, vector<GuessInfo>& history, int leng
     vector<char> digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
     vector<char> possibleDigits;
 
-    int turn = state.turn;
+    int turn = state.turn - 1;
 
-    // For first turn, go random
-    if (turn == 0)
+    // For first and second turn, go random to analyze code first
+    if (turn <= 1)
     {
         return generateUniqueDigitCode(length);
     }
