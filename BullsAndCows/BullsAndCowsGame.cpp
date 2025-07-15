@@ -68,11 +68,20 @@ int main()
     printMenu(settings); // Display the game rules
     do
     {
+        state.turn = 1; // Making sure that every game turn starts at 1
         setupGame(settings, state); // Set up and play the game
-        cout << "Play another game? (y/n): ";
-        cin >> choice; cin.ignore();
 
-        if (tolower(choice) == 'y') state.turn = 1;
+        while (true)
+        {
+            cout << "Play another game? (y/n): ";
+            cin >> choice; cin.ignore();
+            if (tolower(choice) != 'y' && tolower(choice) != 'n')
+            {
+                cout << "Invalid input. Choose only Y, y, N, or n. \n";
+                continue;
+            }
+            break;
+        }
     } while (tolower(choice) == 'y');
 }
 
